@@ -8,7 +8,10 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:whatsapp/is_signinwithapple.dart';
 import 'package:the_apple_sign_in/the_apple_sign_in.dart';
 
+
 Future<void> main() async {
+  
+  
   String? route = 'login';
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();

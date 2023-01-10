@@ -131,6 +131,7 @@ class _OTPPageState extends State<OTPPage> {
                                   userReference.child(value.user!.uid).set({
                                     'uid': value.user!.uid,
                                     'phone': value.user!.phoneNumber,
+                                    'imageURL': 'assets/avatar2.png'
                                   });
                                 }
                                 Navigator.pushReplacement(

@@ -131,34 +131,46 @@ class _LoginPageViewState extends State<LoginPageView> {
                     width: MediaQuery.of(context).size.width * 0.6,
                     child: Center(
                       child: SignInWithAppleButton(onPressed: () async {
-                        final appleIdCredential =
-                            await SignInWithApple.getAppleIDCredential(scopes: [
-                          AppleIDAuthorizationScopes.email,
-                          AppleIDAuthorizationScopes.fullName
-                        ]);
-                        final oAuthProvider = OAuthProvider('apple.com');
-                        final credential = oAuthProvider.credential(
-                            idToken: appleIdCredential.identityToken,
-                            accessToken: appleIdCredential.authorizationCode);
-                        await FirebaseAuth.instance
-                            .signInWithCredential(credential)
-                            .then((value) {
-                          if (value.user != null) {
-                            final userReference =
-                                FirebaseDatabase.instance.ref().child('users');
-                            if (value.user!.uid != null) {
-                              userReference.child(value.user!.uid).set({
-                                'uid': value.user!.uid,
-                                'email': value.user!.email,
-                                'fullname': value.user!.displayName
-                              });
+                        var credential;
+                        try {
+                          final appleIdCredential =
+                              await SignInWithApple.getAppleIDCredential(
+                                  scopes: [
+                                AppleIDAuthorizationScopes.email,
+                                AppleIDAuthorizationScopes.fullName
+                              ]);
+                          final oAuthProvider = OAuthProvider('apple.com');
+                          credential = oAuthProvider.credential(
+                              idToken: appleIdCredential.identityToken,
+                              accessToken: appleIdCredential.authorizationCode);
+                        } catch (e) {
+                          print(e);
+                        }
+                        try {
+                          await FirebaseAuth.instance
+                              .signInWithCredential(credential)
+                              .then((value) {
+                            if (value.user != null) {
+                              final userReference = FirebaseDatabase.instance
+                                  .ref()
+                                  .child('users');
+                              if (value.user!.uid != null) {
+                                userReference.child(value.user!.uid).set({
+                                  'uid': value.user!.uid,
+                                  'email': value.user!.email,
+                                  'fullname': value.user!.displayName,
+                                  'imageURL': 'assets/avatar2.png'
+                                });
+                              }
+                              Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => ChatsView()));
                             }
-                            Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => ChatsView()));
-                          }
-                        });
+                          });
+                        } catch (e) {
+                          print(e);
+                        }
                       }),
                     ),
                   )
