@@ -170,20 +170,17 @@ class _ChatsPageViewState extends State<ChatsPageView> {
                 child: Column(
                   children: [
                     ListTile(
-                      onLongPress: () {
-                        showCupertinoDialog(
-                            barrierDismissible: true,
-                            context: context,
-                            
-                            builder: (context) {
-                              return CupertinoContextMenu(actions: [
-                                CupertinoContextMenuAction(child: Text("Hello"))
-                              ], child: Text("No"),
-                              
-                              );
-                            });
-                      },
                       title: chatMessage[index],
+                      trailing: CupertinoContextMenu(actions: [
+                        CupertinoContextMenuAction(
+                          child: Text("Delete Chat"),
+                          onPressed: () {
+                            chatMessage.remove(chatMessage[index]);
+
+                            Navigator.pop(context);
+                          },
+                        )
+                      ], child: Icon(CupertinoIcons.ellipsis)),
                       onTap: () {
                         _storePosition;
                         var contact = chatMessage[index];
