@@ -63,7 +63,7 @@ class _FindingScreenState extends State<FindingScreen>
                   child: Center(
                       child: Container(
                     decoration: BoxDecoration(
-                        shape: BoxShape.circle, color: Colors.green.shade500),
+                        shape: BoxShape.circle, color: Colors.blue),
                     height: 10,
                     width: 10,
                   )),
@@ -71,8 +71,7 @@ class _FindingScreenState extends State<FindingScreen>
                       shape: BoxShape.circle, //making box to circle
                       color: Colors.transparent,
                       border: Border.all(
-                        color:
-                            Colors.green.shade500.withOpacity(opacAnim!.value),
+                        color: Colors.blue.withOpacity(opacAnim!.value),
                       ) //background of container
                       ),
                   height: animation!.value, //value from animation controller
@@ -93,7 +92,7 @@ class _FindingScreenState extends State<FindingScreen>
                     style: TextStyle(color: Colors.white),
                   )),
                   decoration: BoxDecoration(
-                      color: Colors.green.shade500,
+                      color: Colors.blue,
                       borderRadius: BorderRadius.circular(20)),
                 ),
               ),

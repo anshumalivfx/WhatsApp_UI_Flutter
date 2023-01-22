@@ -9,12 +9,15 @@ class ChatsMessage extends StatefulWidget {
 
   String? unseenMessage;
 
+  String? uid;
+
   ChatsMessage(
       {Key? key,
       this.imageURL,
       this.name,
       this.previousMessage,
-      this.unseenMessage})
+      this.unseenMessage,
+      this.uid})
       : super(key: key);
 
   @override
@@ -36,7 +39,8 @@ class _ChatsMessageState extends State<ChatsMessage> {
               decoration: BoxDecoration(
                   borderRadius: BorderRadius.all(Radius.circular(50)),
                   image: DecorationImage(
-                      image: NetworkImage(widget.imageURL!),
+                      image: NetworkImage(widget.imageURL ??
+                          "https://p.kindpng.com/picc/s/22-223863_no-avatar-png-circle-transparent-png.png"),
                       fit: BoxFit.cover)),
             ),
             Container(
@@ -44,16 +48,22 @@ class _ChatsMessageState extends State<ChatsMessage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(widget.name!,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        )),
+                    Container(
+                      child: Text(widget.name!,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          )),
+                    ),
                     Spacer(),
-                    Text(
-                      widget.previousMessage!,
-                      style:
-                          TextStyle(fontSize: 15, color: Colors.grey.shade700),
+                    Container(
+                      width: MediaQuery.of(context).size.width * 0.5,
+                      height: 20,
+                      child: Text(
+                        widget.previousMessage!,
+                        style: TextStyle(
+                            fontSize: 15, color: Colors.grey.shade700),
+                      ),
                     ),
                   ],
                 )),

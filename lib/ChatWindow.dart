@@ -1,29 +1,112 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/ui/utils/stream_subscriber_mixin.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/widgets.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter_chat_ui/flutter_chat_ui.dart';
+import 'dart:convert';
+import 'dart:math';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
+import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 
 class ChatWindowView extends StatefulWidget {
   String? ChatUserTitle;
   String? imageURL;
+  String? uuid;
   ChatWindowView(
-      {super.key, @required this.ChatUserTitle, @required this.imageURL});
+      {super.key, this.ChatUserTitle, this.imageURL, required this.uuid});
 
   @override
   _ChatWindowViewState createState() => _ChatWindowViewState();
 }
 
+String randomString() {
+  final random = Random.secure();
+  final values = List<int>.generate(16, (i) => random.nextInt(255));
+  return base64UrlEncode(values);
+}
+
 class _ChatWindowViewState extends State<ChatWindowView> {
   String message = "";
 
-  late TextEditingController _textEditingController;
+  List chatMessages = [];
 
   List<Widget> messageList = [];
+
+  late TextEditingController _textEditingController;
+
+  final List<types.Message> _messages = [];
+
+  final _user = types.User(id: FirebaseAuth.instance.currentUser!.uid);
+
+  String recUID = "";
+
+  // fetchMessages() async {
+  //   await FirebaseDatabase.instance
+  //       .ref("users")
+  //       .child(FirebaseAuth.instance.currentUser!.uid)
+  //       .child("Chats")
+  //       .child(recUID)
+  //       .child("messages")
+  //       .orderByChild("time")
+  //       .limitToLast(100)
+  //       .onChildAdded
+  //       .listen((event) {
+  //     if (event.snapshot.value != null) {
+  //       final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+  //       _messages.add(types.TextMessage(
+  //         author: types.User(id: data["sender"]),
+  //         createdAt: data["time"],
+  //         id: randomString(),
+  //         text: data["message"],
+  //       ));
+  //       setState(() {}); // <-- call setState here to rebuild widget tree
+  //     }
+  //   });
+
+  //   _messages.sort((a, b) => a.createdAt!.compareTo(b.createdAt!));
+  // }
+
+  fetchMessages() async {
+    await FirebaseDatabase.instance
+        .ref("users")
+        .child(FirebaseAuth.instance.currentUser!.uid)
+        .child("Chats")
+        .child(recUID)
+        .child("messages")
+        .orderByChild("time")
+        .onChildAdded
+        .listen((event) {
+      if (event.snapshot.value != null) {
+        final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+        _messages.insert(
+            0,
+            types.TextMessage(
+              author: types.User(id: data["sender"]),
+              createdAt: data["time"],
+              id: randomString(),
+              text: data["message"],
+            ));
+        setState(() {});
+      }
+    });
+  }
+
   @override
   void initState() {
     super.initState();
+
+    recUID = widget.uuid!;
+
     _textEditingController = TextEditingController();
+
+    fetchMessages();
+
+    _messages.sort((a, b) => a.createdAt!.compareTo(b.createdAt!));
   }
 
   @override
@@ -56,148 +139,75 @@ class _ChatWindowViewState extends State<ChatWindowView> {
           ],
         ),
       ),
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        child: ListView(children: messageList),
-        decoration: BoxDecoration(
-            image: DecorationImage(
-                image: AssetImage("assets/background.png"), fit: BoxFit.cover)),
-      ),
-      bottomSheet: BottomAppBar(
-        child: Container(
-          width: double.infinity,
-          height: MediaQuery.of(context).size.height * 0.1113,
-          child: Center(
-            child: Row(children: [
-              CupertinoButton(
-                  child: Icon(CupertinoIcons.add), onPressed: () {}),
-              SizedBox(
-                width: MediaQuery.of(context).size.width * 0.67,
-                child: CupertinoTextField(
-                    autocorrect: false,
-                    controller: _textEditingController,
-                    placeholder: "Write your message......",
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade200),
-                      borderRadius: BorderRadius.circular(20),
-                    )),
-              ),
-              IconButton(
-                  padding: EdgeInsets.only(bottom: 15, left: 10),
-                  onPressed: () {
-                    setState(() {
-                      messageList.add(
-                          ChatBubbleSend(message: _textEditingController.text));
-                    });
-                  },
-                  icon: Icon(
-                    CupertinoIcons.arrowtriangle_right_circle_fill,
-                    color: Colors.blue,
-                    size: 45,
-                    textDirection: TextDirection.ltr,
-                  ))
-            ]),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class CustomShape extends CustomPainter {
-  final Color bgColor;
-
-  CustomShape(this.bgColor);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    var paint = Paint()..color = bgColor;
-
-    var path = Path();
-    path.lineTo(-5, 0);
-    path.lineTo(0, 10);
-    path.lineTo(5, 0);
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) {
-    return false;
-  }
-}
-
-class ChatBubbleSend extends StatelessWidget {
-  String message;
-  ChatBubbleSend({super.key, required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Flexible(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Flexible(
-            child: Container(
-              padding: EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: Colors.blue,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(18),
-                  bottomLeft: Radius.circular(18),
-                  bottomRight: Radius.circular(18),
+      body: Chat(
+        messages: _messages,
+        onSendPressed: _handleSendPressed,
+        user: _user,
+        theme: const DefaultChatTheme(
+            inputBackgroundColor: Color.fromARGB(255, 255, 255, 255),
+            inputTextColor: Colors.grey,
+            inputBorderRadius: BorderRadius.all(Radius.circular(20)),
+            inputContainerDecoration: BoxDecoration(
+              border: Border(
+                top: BorderSide(
+                  color: Colors.grey,
+                  width: 0.5,
                 ),
               ),
-              child: Text(
-                message,
-                style: TextStyle(color: Colors.white, fontSize: 14),
-              ),
             ),
-          ),
-          CustomPaint(painter: CustomShape(Colors.blue)),
-        ],
+            sendButtonIcon: Icon(Icons.send)),
       ),
     );
   }
-}
 
-class ChatBubbleRecieved extends StatelessWidget {
-  String message;
-  ChatBubbleRecieved({super.key, required this.message});
+  void _addMessage(types.Message message) {
+    setState(() {
+      _messages.insert(0, message);
+    });
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Flexible(
-        child: Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Transform(
-          alignment: Alignment.center,
-          transform: Matrix4.rotationY(180),
-          child: CustomPaint(
-            painter: CustomShape(Colors.grey.shade100),
-          ),
-        ),
-        Flexible(
-          child: Container(
-            padding: EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.only(
-                topRight: Radius.circular(18),
-                bottomLeft: Radius.circular(18),
-                bottomRight: Radius.circular(18),
-              ),
-            ),
-            child: Text(
-              message,
-              style: TextStyle(color: Colors.black, fontSize: 14),
-            ),
-          ),
-        ),
-      ],
-    ));
+  void _handleSendPressed(types.PartialText message) async {
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+
+    final messageRef = FirebaseDatabase.instance
+        .ref("users")
+        .child(FirebaseAuth.instance.currentUser!.uid)
+        .child("Chats")
+        .child(recUID)
+        .child("messages")
+        .push();
+
+    await messageRef.set({
+      "author": FirebaseAuth.instance.currentUser!.uid,
+      "image": widget.imageURL,
+      "message": message.text,
+      "sender": FirebaseAuth.instance.currentUser!.uid,
+      "receiver": FirebaseAuth.instance.currentUser!.displayName.toString(),
+      "time": timestamp
+    });
+
+    final messageRef2 = FirebaseDatabase.instance
+        .ref("users")
+        .child(recUID)
+        .child("Chats")
+        .child(FirebaseAuth.instance.currentUser!.uid)
+        .child("messages")
+        .push();
+
+    await messageRef2.set({
+      "author": recUID,
+      "image": widget.imageURL,
+      "message": message.text,
+      "sender": FirebaseAuth.instance.currentUser!.uid,
+      "receiver": FirebaseAuth.instance.currentUser!.displayName.toString(),
+      "time": timestamp
+    });
+
+    final textMessage = types.TextMessage(
+      author: this._user,
+      createdAt: timestamp,
+      id: randomString(),
+      text: message.text,
+    );
   }
 }

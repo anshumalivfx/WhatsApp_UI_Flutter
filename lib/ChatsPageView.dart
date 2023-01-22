@@ -23,57 +23,19 @@ class ChatsPageView extends StatefulWidget {
 
 var getPhoneNumber;
 
-getPhoneNum() {
-  return getPhoneNumber;
-}
+Map<String, dynamic> availablePhoneNumbers = {};
 
-List chatMessage = [
-  ChatsMessage(
-      imageURL:
-          "https://nypost.com/wp-content/uploads/sites/2/2021/02/leatham.jpg?quality=75&strip=all",
-      name: "Ben Dover",
-      previousMessage: "bro",
-      unseenMessage: "69"),
-  ChatsMessage(
-      imageURL:
-          "https://images.complex.com/complex/images/c_fill,dpr_auto,f_auto,q_auto,w_1400/fl_lossy,pg_1/fgpu6alkl1stxe7jeasl/florida-man-chad-mason?fimg-ssr-default",
-      name: "Chad the Incel",
-      previousMessage: "bro",
-      unseenMessage: "69"),
-  ChatsMessage(
-      imageURL:
-          "https://cloudfront-us-east-1.images.arcpublishing.com/gmg/NLP2DZUNYNDV3EE5EOGNCSHHHE.jpg",
-      name: "Mike Rofone",
-      previousMessage: "Dude No",
-      unseenMessage: "69"),
-  ChatsMessage(
-      imageURL:
-          "https://nypost.com/wp-content/uploads/sites/2/2022/01/florida-attack-449.jpg?quality=75&strip=all",
-      name: "PDF File",
-      previousMessage: "I Hate You",
-      unseenMessage: "69"),
-  ChatsMessage(
-      imageURL:
-          "https://globalnews.ca/wp-content/uploads/2016/10/florida.png?resize=696,600",
-      name: "Half Head",
-      previousMessage: "Nope",
-      unseenMessage: "69"),
-  ChatsMessage(
-      imageURL:
-          "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTny1bpx6VFLd4W0CW930fs19tpNncfdJzn7A&usqp=CAU",
-      name: "Homeless Jade",
-      previousMessage: "Союз Нерушими Республик",
-      unseenMessage: "69"),
-  ChatsMessage(
-      imageURL:
-          "https://www.thoughtco.com/thmb/D65eUb56GTdOqjyyhM-lA7pjQks=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/Grigory-Rasputin-58addee83df78c345bdfe8d0.jpg",
-      name: "Иван Нотов",
-      previousMessage: "Коммынизма Совот",
-      unseenMessage: "69"),
-];
+getPhoneNum() {
+  return availablePhoneNumbers;
+}
 
 class _ChatsPageViewState extends State<ChatsPageView> {
   var _tapPosition;
+  var users;
+  var validPhoneNumber;
+
+  List chatMessage = [];
+
   List<String> phoneNumbers = [];
   void fetchContacts() async {
     Iterable<Contact> contacts = await ContactsService.getContacts();
@@ -81,19 +43,72 @@ class _ChatsPageViewState extends State<ChatsPageView> {
       if (contact.phones == null) return;
       for (var i = 0; i < contact.phones!.length; i++) {
         if (contact.phones?.elementAt(i).value != null)
-          phoneNumbers.add(contact.phones!.elementAt(i).value!);
+          // remove special characters and spaces
+          validPhoneNumber = contact.phones
+              ?.elementAt(i)
+              .value!
+              .replaceAll(RegExp(r'[^0-9]'), '')
+              .replaceAll(RegExp(r' '), '');
+
+        // add to phoneNumbers
+        phoneNumbers.add("+$validPhoneNumber");
       }
       getPhoneNumber = phoneNumbers;
     });
+  }
 
-    phoneNumbers.forEach((element) {
-      print("$element");
+  fetchMessages() {
+    var currentUser = FirebaseAuth.instance.currentUser;
+
+    FirebaseDatabase.instance
+        .ref("users")
+        .child(currentUser!.uid)
+        .child("Chats")
+        .onValue
+        .listen((event) {
+      String name = "";
+      String imageURL = "";
+      String previousMessage = "";
+      String uid = "";
+      final data = Map<String, dynamic>.from(
+        event.snapshot.value as Map,
+      );
+      data.forEach((key, value) {
+        final data = Map<String, dynamic>.from(
+          value as Map,
+        );
+        uid = key;
+        data.forEach((key, value) {
+          final finalData = Map<String, dynamic>.from(
+            value as Map,
+          );
+          finalData.forEach((key, value) {
+            setState(() {
+              name = value["reciever"] ?? "Unknown";
+              previousMessage = value["message"];
+            });
+            imageURL = value["image"];
+          });
+        });
+      });
+
+      setState(() {
+        chatMessage.add(ChatsMessage(
+          name: name,
+          imageURL: imageURL,
+          previousMessage: previousMessage,
+          unseenMessage: "",
+          uid: uid,
+        ));
+      });
     });
   }
 
   @override
   void initState() {
     fetchContacts();
+    fetchContact();
+    fetchMessages();
     super.initState();
   }
 
@@ -115,40 +130,25 @@ class _ChatsPageViewState extends State<ChatsPageView> {
         event.snapshot.value as Map,
       );
 
-      data.forEach((key, value) {});
+      users = data;
+
+      // check if users phone number registered in getPhoneNumber
+      // if yes then add to chatMessage
+      Map<String, dynamic> available = {};
+      for (var i = 0; i < getPhoneNumber.length; i++) {
+        users.forEach((key, value) {
+          if (value['phone'] == getPhoneNumber[i]) {
+            available[key] = value;
+          } else {
+            print("No");
+          }
+        });
+      }
+
+      availablePhoneNumbers = available;
 
       var currentUser = FirebaseAuth.instance.currentUser;
     });
-    // var documentsDirectory = await getDatabasesPath();
-    // String path = join(documentsDirectory, "TestDB.db");
-    // await deleteDatabase(path);
-    // Database database = await openDatabase(path, version: 1,
-    //     onCreate: (Database db, int version) async {
-    //   // When creating the db, create the table
-
-    //   // check if table contacts is already created and if not create it
-
-    //   await db.execute(
-    //       'CREATE TABLE contacts (id INTEGER PRIMARY KEY, name TEXT, phone TEXT, imageURL TEXT)');
-    //   print("Table created");
-    // });
-    // this.contacts.forEach((element) async {
-    //   // check if contact already exists in the database
-    //   var contact = await database.rawQuery(
-    //       'SELECT * FROM contacts WHERE name="${element.displayName}";');
-    //   if (contact.isEmpty) {
-    //     // insert contact into the database
-    //     var insert = await database.rawInsert(
-    //         'INSERT INTO contacts (name, phone, imageURL) VALUES ("${element.displayName}", "${element.phones.toList()}", "avatar2.png")');
-    //     if (insert == 0) {
-    //       print("Failed to insert");
-    //     } else {
-    //       print("Inserted");
-    //     }
-    //   }
-
-    //   var data = await database.rawQuery('SELECT * FROM contacts;');
-    //   print(data);
   }
 
   bool finding = false;
@@ -190,6 +190,7 @@ class _ChatsPageViewState extends State<ChatsPageView> {
                                 builder: (context) => ChatWindowView(
                                       ChatUserTitle: contact.name,
                                       imageURL: contact.imageURL,
+                                      uuid: contact.uid,
                                     )));
                       },
                     ),
@@ -216,7 +217,7 @@ class _ChatsPageViewState extends State<ChatsPageView> {
                         style: TextStyle(color: Colors.white),
                       )),
                       decoration: BoxDecoration(
-                          color: Colors.green.shade500,
+                          color: Colors.blue,
                           borderRadius: BorderRadius.circular(20)),
                     ),
                   ),

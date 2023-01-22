@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:pinput/pinput.dart';
 import 'package:whatsapp/ChatsView.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:whatsapp/RegistrationPageView.dart';
 
 class OTPPage extends StatefulWidget {
   String? number;
@@ -137,7 +138,9 @@ class _OTPPageState extends State<OTPPage> {
                                 Navigator.pushReplacement(
                                     context,
                                     MaterialPageRoute(
-                                        builder: (context) => ChatsView()));
+                                        builder: (context) =>
+                                            RegistrationPageView(
+                                                isAppleSignIn: false)));
                               }
                             });
                           } catch (e) {

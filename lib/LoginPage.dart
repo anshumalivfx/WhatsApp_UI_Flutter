@@ -7,6 +7,7 @@ import 'package:whatsapp/OTPPage.dart';
 import 'package:whatsapp/ChatsView.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:whatsapp/RegistrationPageView.dart';
 
 class LoginPageView extends StatefulWidget {
   const LoginPageView({Key? key}) : super(key: key);
@@ -159,13 +160,14 @@ class _LoginPageViewState extends State<LoginPageView> {
                                   'uid': value.user!.uid,
                                   'email': value.user!.email,
                                   'fullname': value.user!.displayName,
-                                  'imageURL': 'assets/avatar2.png'
                                 });
                               }
                               Navigator.pushReplacement(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => ChatsView()));
+                                      builder: (context) =>
+                                          RegistrationPageView(
+                                              isAppleSignIn: true)));
                             }
                           });
                         } catch (e) {

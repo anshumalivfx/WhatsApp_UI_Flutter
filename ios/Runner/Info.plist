@@ -34,11 +34,25 @@
 				<string>app-1-985982724114-ios-1ee458e838ca64af0c10cb</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>app-1-985982724114-ios-268de77dd40cc9b00c10cb</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Heyyo wants to access your Camera</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Allow Heyyo to Access Contact</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Heyyo wants to access your Photo Library</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
